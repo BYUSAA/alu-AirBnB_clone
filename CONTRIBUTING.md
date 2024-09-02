@@ -23,6 +23,5 @@ This post will give you the instructions and guidelines to follow when contribut
  
  - Once you submit your changes to the branch, we’d like you to open a new pull request on GitHub as a request to merge directly to the ‘master’ branch of this repository. 
  
- - Your first contribution is a Must: Please append Your name and e–mail to the AUTHORS file maintained at. /AUTHORS in the following format only. 
- 
+ - Your first contribution is a Must: Please append Your name and e–mail to the [AUTHORS](./AUTHORS). /AUTHORS in the following format only. 
  
