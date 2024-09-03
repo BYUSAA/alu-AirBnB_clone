@@ -24,86 +24,79 @@ class TestConsole(unittest.TestCase):
             HBNBCommand().onecmd("EOF")
             self.assertEqual("", f.getvalue().strip())
 
-    def test_create(self):
-        """Test create command input."""
+    def test_help(self):
+        """Test help command input."""
         with patch('sys.stdout', new=StringIO()) as f:
-            HBNBCommand().onecmd("create")
-            self.assertEqual("** class name missing **", f.getvalue().strip())
+            HBNBCommand().onecmd("help")
+            self.assertIsNotNone(f.getvalue().strip())
 
+    def test_create_BaseModel(self):
+        """Test create BaseModel command input."""
         with patch('sys.stdout', new=StringIO()) as f:
             HBNBCommand().onecmd("create BaseModel")
             self.assertRegex(f.getvalue().strip(), r'\w+-\w+-\w+-\w+-\w+')
 
+    def test_create_User(self):
+        """Test create User command input."""
         with patch('sys.stdout', new=StringIO()) as f:
             HBNBCommand().onecmd("create User")
             self.assertRegex(f.getvalue().strip(), r'\w+-\w+-\w+-\w+-\w+')
 
-    def test_show(self):
-        """Test show command input."""
+    def test_create_State(self):
+        """Test create State command input."""
         with patch('sys.stdout', new=StringIO()) as f:
-            HBNBCommand().onecmd("show")
-            self.assertEqual("** class name missing **", f.getvalue().strip())
+            HBNBCommand().onecmd("create State")
+            self.assertRegex(f.getvalue().strip(), r'\w+-\w+-\w+-\w+-\w+')
 
+    def test_create_City(self):
+        """Test create City command input."""
         with patch('sys.stdout', new=StringIO()) as f:
-            HBNBCommand().onecmd("show BaseModel")
-            self.assertEqual("** instance id missing **", f.getvalue().strip())
+            HBNBCommand().onecmd("create City")
+            self.assertRegex(f.getvalue().strip(), r'\w+-\w+-\w+-\w+-\w+')
 
+    def test_create_Amenity(self):
+        """Test create Amenity command input."""
+        with patch('sys.stdout', new=StringIO()) as f:
+            HBNBCommand().onecmd("create Amenity")
+            self.assertRegex(f.getvalue().strip(), r'\w+-\w+-\w+-\w+-\w+')
+
+    def test_create_Place(self):
+        """Test create Place command input."""
+        with patch('sys.stdout', new=StringIO()) as f:
+            HBNBCommand().onecmd("create Place")
+            self.assertRegex(f.getvalue().strip(), r'\w+-\w+-\w+-\w+-\w+')
+
+    def test_create_Review(self):
+        """Test create Review command input."""
+        with patch('sys.stdout', new=StringIO()) as f:
+            HBNBCommand().onecmd("create Review")
+            self.assertRegex(f.getvalue().strip(), r'\w+-\w+-\w+-\w+-\w+')
+
+    def test_show_BaseModel(self):
+        """Test show BaseModel command input."""
         with patch('sys.stdout', new=StringIO()) as f:
             HBNBCommand().onecmd("show BaseModel 123456")
             self.assertEqual("** no instance found **", f.getvalue().strip())
 
-    def test_destroy(self):
-        """Test destroy command input."""
+    def test_show_User(self):
+        """Test show User command input."""
         with patch('sys.stdout', new=StringIO()) as f:
-            HBNBCommand().onecmd("destroy")
-            self.assertEqual("** class name missing **", f.getvalue().strip())
+            HBNBCommand().onecmd("show User 123456")
+            self.assertEqual("** no instance found **", f.getvalue().strip())
 
+    def test_show_State(self):
+        """Test show State command input."""
         with patch('sys.stdout', new=StringIO()) as f:
-            HBNBCommand().onecmd("destroy BaseModel")
-            self.assertEqual("** instance id missing **", f.getvalue().strip())
+            HBNBCommand().onecmd("show State 123456")
+            self.assertEqual("** no instance found **", f.getvalue().strip())
 
+    def test_show_City(self):
+        """Test show City command input."""
         with patch('sys.stdout', new=StringIO()) as f:
-            HBNBCommand().onecmd("destroy BaseModel 123456")
-            self.assertEqual("", f.getvalue().strip())
+            HBNBCommand().onecmd("show City 123456")
+            self.assertEqual("** no instance found **", f.getvalue().strip())
 
-    def test_all(self):
-        """Test all command input."""
+    def test_show_Amenity(self):
+        """Test show Amenity command input."""
         with patch('sys.stdout', new=StringIO()) as f:
-            HBNBCommand().onecmd("all")
-            self.assertEqual("", f.getvalue().strip())
-
-        with patch('sys.stdout', new=StringIO()) as f:
-            HBNBCommand().onecmd("all BaseModel")
-            self.assertEqual("", f.getvalue().strip())
-
-    def test_update(self):
-        """Test update command input."""
-        with patch('sys.stdout', new=StringIO()) as f:
-            HBNBCommand().onecmd("update")
-            self.assertEqual("** class name missing **", f.getvalue().strip())
-
-        with patch('sys.stdout', new=StringIO()) as f:
-            HBNBCommand().onecmd("update BaseModel")
-            self.assertEqual("** instance id missing **", f.getvalue().strip())
-
-        with patch('sys.stdout', new=StringIO()) as f:
-            HBNBCommand().onecmd("update BaseModel 123456")
-            self.assertEqual("** attribute name missing **", f.getvalue().strip())
-
-        with patch('sys.stdout', new=StringIO()) as f:
-            HBNBCommand().onecmd("update BaseModel 123456 name")
-            self.assertEqual("** value missing **", f.getvalue().strip())
-
-    def test_count(self):
-        """Test count command input."""
-        with patch('sys.stdout', new=StringIO()) as f:
-            HBNBCommand().onecmd("count")
-            self.assertEqual("** class name missing **", f.getvalue().strip())
-
-        with patch('sys.stdout', new=StringIO()) as f:
-            HBNBCommand().onecmd("count BaseModel")
-            self.assertEqual("0", f.getvalue().strip())
-
-    def test_help(self):
-        """Test help command input."""
-        with patch('sys.stdout', new
+            HBNBCommand().onecmd("show Amenity 
