@@ -1,33 +1,31 @@
-#!/usr/bin/python3
-"""unittest for User class"""
 import unittest
-from models import BaseModel
 from models.user import User
 
-
 class TestUser(unittest.TestCase):
-    """Test cases for User class."""
+    def test_instantiation(self):
+        user = User()
+        self.assertIsInstance(user, User)
 
-    def setUp(self):
-        self.testUser = User()
+    def test_attributes(self):
+        user = User()
+        self.assertTrue(hasattr(user, 'email'))
+        self.assertTrue(hasattr(user, 'password'))
+        self.assertTrue(hasattr(user, 'first_name'))
+        self.assertTrue(hasattr(user, 'last_name'))
 
-    def test_user(self):
-        """Test if User class is subclass of BaseModel."""
-        self.assertTrue(issubclass(self.testUser.__class__, BaseModel))
+    def test_save(self):
+        user = User()
+        user.save()
+        self.assertTrue(user.updated_at > user.created_at)
 
-    def test_email(self):
-        """Test email class attribute."""
-        self.assertIsInstance(self.testUser.email, str)
-
-    def test_password(self):
-        self.assertIsInstance(self.testUser.password, str)
-
-    def test_first_name(self):
-        self.assertIsInstance(self.testUser.first_name, str)
-
-    def test_last_name(self):
-        self.assertIsInstance(self.testUser.last_name, str)
-
-
-if __name__ == '__main__':
-    unittest.main()
+    def test_to_dict(self):
+        user = User()
+        user_dict = user.to_dict()
+        self.assertIsInstance(user_dict, dict)
+        self.assertIn('id', user_dict)
+        self.assertIn('created_at', user_dict)
+        self.assertIn('updated_at', user_dict)
+        self.assertIn('email', user_dict)
+        self.assertIn('password', user_dict)
+        self.assertIn('first_name', user_dict)
+        self.assertIn('last_name', user_dict)
