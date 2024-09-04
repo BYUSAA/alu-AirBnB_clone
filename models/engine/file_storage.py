@@ -1,378 +1,90 @@
-#!/usr/bin/python3
-"""console"""
+#!/usr/bin/env python
+"""A module that that serializes instances to a JSON file and deserializes
+JSON file to instances"""
 
-import cmd
-from os import system
-import sys
+import json
+import os
 from models.base_model import BaseModel
-from models.user import User
-from models.engine.file_storage import FileStorage
 from models.user import User
 from models.amenity import Amenity
 from models.city import City
 from models.place import Place
 from models.review import Review
 from models.state import State
-import re
-# models class stored in dict for easier access.
-classes = {
-    "BaseModel": BaseModel,
-    "User": User,
-    "City": City,
-    "Place": Place,
-    "Review": Review,
-    "State": State,
-    "Amenity": Amenity
-}
 
 
-class HBNBCommand(cmd.Cmd):
-    """Command processor for ALU-AirBnB project"""
+class FileStorage:
 
-    prompt = '(hbnb) '
-    ruler = '-'
+    # private class attributes
+    # __file_path is the path to the JSON file to store all objects.
+    __file_path = 'storage.json'
 
-    def default(self, line):
-        """default method for commands not in the cmd module.
-        For this application it handles the dot notation commands."""
+    # __objects is a dictionary that stores all objects by <class name>.id
+    # ex: to store a BaseModel object with id=12121212, the key will be
+    # BaseModel.12121212 and the value will be the object.
+    # the object (value of key) is stored like this:
+    # <models.base_model.BaseModel object at 0x7f3329dac310>
+    # obects = {BaseModel.12121212: }
+    __objects = {}
 
-        if "." in line:
+    def all(self, cls=None):
+        """Returns a list of all objects if cls is None. If cls is provided, return all objects of that type.
+        """
 
-            command = line.split(".")
-            if command[1] == "all()":
-                self.do_all(command[0])
+        if cls is not None:
 
-            elif command[1] == "count()":
-                self.do_count(command[0])
-
-            elif command[1].startswith("show("):
-                self.do_show(command[0] + " " + command[1][6:-2])
-
-            elif command[1].startswith("destroy("):
-                self.do_destroy(command[0] + " " + command[1][9:-2])
-
-            elif command[1].startswith("update("):
-
-                # remove the model name, and get the rest of the string
-                command_pattern = re.compile("update\\((.+)\\)")
-                command_result = command_pattern.search(line).group()
-
-                # get Id from the string
-                id_pattern = re.compile(
-                    "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}"
-                    "-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
-                )
-
-                id = id_pattern.search(command_result)
-                if id is not None:
-                    id = id.group()
-                # check if attributes and values are provided in dict format
-                dict_repr_pattern = re.compile(r"{.+}")
-                dict_repr = dict_repr_pattern.search(line)
-
-                # if it is dict format, execute update for each key value pair
-                if dict_repr:
-
-                    # get dict representation
-                    dict_repr = dict_repr.group()
-                    dict_repr = eval(dict_repr)
-
-                    # excute the update with each key value pair
-                    for key, value in dict_repr.items():
-                        param_to_pass = command[0] + ' ' + \
-                            str(id) + ' ' + key + ' ' + str(value)
-                        self.do_update(param_to_pass)
-
-                # if dict format is not provided, it means the attributes
-                #  and values are provided as parameters
-                else:
-
-                    # get the parameters from the string
-                    # and remove the first and last brackets
-                    # the format of parms variable is as follows:
-                    # ex: params:  "b1d6-eaaddf0e76c1", "first_name", "John"
-                    # on the above line id value is trimmed for convenience.
-                    params = command_result[7:-1]
-                    # print("params: ", params)
-
-                    # the following for loop is to check if user entered
-                    # values with spaces after comma(,).
-                    # If the user did not enter spaces after comma(,)
-                    # it will create a problem while slicing the string to
-                    # get the values, specifically value parameter is extracted
-                    # without error given space is provided after comma(,).
-                    index_counter = 0
-                    for param in params.split(","):
-
-                        if index_counter >= 1 and not param.startswith(" "):
-                            print(
-                                "Insert spaces after comma(,) "
-                                "to divide parameters"
-                            )
-                            return
-                        index_counter += 1
-
-                    # get the id, attribute and value from the string
-                    attr = params.split(",")[1][2:-1]
-                    value = params.split(",")[2][1:]
-
-                    # incase the value of variable value is int pass it on eval
-                    # to convert it to int, if it is not int, it will throw an
-                    # exception, in that case we will not pass it on eval.
-                    try:
-                        eval(value)
-                        value = eval(value)
-                    except Exception as e:
-                        pass
-
-                    # create the parameter string to pass on to do_update
-                    param_to_pass = command[0] + ' ' + \
-                        str(id) + ' ' + attr + ' ' + str(value)
-                    self.do_update(param_to_pass)
-            else:
-                print("*** Unknown syntax: {}".format(line))
+            obj = {}
+            print(FileStorage.__objects.items())
+            for key, val in FileStorage.__objects.items():
+                if cls.__name__ in key:
+                    obj[key] = val
+            return obj
         else:
-            print("*** Unknown syntax: {}".format(line))
-    # basic commands
+            return self.__objects
 
-    def do_EOF(self, line):
-        return True
+    # sets in __objects the obj with key <obj class name>.id
+    def new(self, obj):
+        """Add obj with key <obj class name>.id to dictionary.
 
-    def do_quit(self, arg):
-        return True
-    # short cut for quit command.
-    do_q = do_quit
+        Args:
 
-    def help_q(self):
-        print("Shortcut for quit command")
+        obj: the object with key <obj class name>.id
+        """
+        key = obj.__class__.__name__ + '.' + obj.id
+        # json_data = json.dump(obj)
+        self.__objects[key] = obj
 
-    def help_quit(self):
-        print("Quit command to exit the program")
+    # serializes __objects to the JSON file (path: __file_path)
+    def save(self):
+        """ Serializes __objects to the JSON file (path: __file_path)."""
+        json_obj = {}
+        for key in self.__objects.keys():
+            json_obj[key] = self.__objects[key].to_dict()
 
-    def help_EOF(self):
-        print("EOF command to exit the program")
+        with open(self.__file_path, 'w') as json_file:
+            json.dump(json_obj, json_file)
 
-    def help_help(self):
-        print("Help command to print help information about a command")
+    def reload(self):
+        """Deserializes the JSON file to __objects (only if the JSON file"""
+        """(path: __file_path) exists ; otherwise, do nothing."""
+        if os.path.exists(self.__file_path):
+            with open(self.__file_path, 'r') as json_file:
+                json_obj = json.load(json_file)
+                for key in json_obj.keys():
 
-    def emptyline(self):
-        # do nothing
-        pass
+                    # By providing the dict value stored in json_obj[key] as
+                    # kwargs, genrate an object with the same attributes
+                    self.__objects[key] = eval(
+                        json_obj[key]['__class__'])(**json_obj[key])
 
-    # command to clear the window
-    def do_clear(self, arg):
-        system('cls')
-    
-    def help_clear(self):
-        print("Clear command to clear the screen")
-
-    # commands to handle BaseModel
-
-    def do_create(self, args):
-
-        # split the args to get the class name
-        class_name = args.split(' ')[0]
-        # Validate if the class name is provided and if it exists
-        if not class_name:
-            print("** class name missing **")
-        elif class_name not in classes.keys():
-            print("** class doesn't exist **")
-        else:
-            # create an instance of the class
-            new_model = classes[class_name]()
-
-            # if there are parameters provided, set the attributes
-            if len(args.split(' ')) > 1:
-
-                # get the parameters from the string
-                params = args.split(' ')[1:]
-                for param in params:
-                    # split the param to get the key and value
-                    key, value = param.split('=')
-                
-                    # if value is convertable to another type, convert it
-                    # convertable types are int, float, bool
-                    try:
-                        value = eval(value)
-                    except Exception as e:
-                        pass
-                    # if value is a string and it contains underscore(_)
-                    # replace the underscore with space
-                    if type(value) is str and '_' in value:
-                        value = value.replace('_', ' ')
-
-                    setattr(new_model, key, value)
-                    new_model.save()
-                    print(new_model.id)
-                return
-            new_model.save()
-            print(new_model.id)
-
-    def help_create(self):
-        print("Create command to create a new instance of a class")
-        print("Usage: create <class name>")
-        print("Example: create BaseModel")
-
-    def do_show(self, cls_and_id):
-
-        if len(cls_and_id) == 0:
-            print("** class name missing **")
-            return
-        elif len(cls_and_id.split(' ')) == 1:
-            print("** instance id missing **")
-            return
-        elif cls_and_id.split(' ')[0] not in classes.keys():
-            print("** class doesn't exist **")
-            return
-        # create a key of the form <class name>.<id> to search in the storage
-        user_key = cls_and_id.split(' ')[0] + '.' + cls_and_id.split(' ')[1]
-
-        storage = FileStorage()
-        storage.reload()
-        all_objects = storage.all()
-
-        # if the user input key is found in the storage, then print the object
-        if user_key in all_objects.keys():
-            print(all_objects[user_key])
-            return
-
-        # if we reach here, then the object is not found.
-        print("** no instance found **")
-
-    def help_show(self):
-        print("Show command to print the string representation of an instance")
-        print("Usage: show <class name> <id>")
-        print("Example: show BaseModel 029307ba-43b9-476f-8856-55a800762378")
-
-    def do_destroy(self, cls_and_id):
-
-        if len(cls_and_id) == 0:
-            print("** class name missing **")
-            return
-        elif len(cls_and_id.split(' ')) == 1:
-            print("** instance id missing **")
-            return
-        elif cls_and_id.split(' ')[0] not in classes.keys():
-            print("** class doesn't exist **")
-            return
-        # create a key of the form <class name>.<id> to search in the storage
-        user_key = cls_and_id.split(' ')[0] + '.' + cls_and_id.split(' ')[1]
-
-        storage = FileStorage()
-        storage.reload()
-        all_objects = storage.all()
-
-        # if the user input key is found in the storage, then delete the object
-        if user_key in all_objects.keys():
-            del all_objects[user_key]
-            storage.save()
-            print("Destroyed successfully!")
-            return
-        # if we reach here, then the object is not found.
-        print("** no instance found **")
-
-    def help_destroy(self):
-        print("Destroy command to delete an object from storage")
-        print("Usage: destroy <class name> <id>")
-        print("Example: destroy BaseModel 029307ba-43b9-476f-55a800762378")
-
-    def do_all(self, cls):
-        storage = FileStorage()
-        storage.reload()
-        all_objects = storage.all()
-        if not cls:
-            print([str(obj) for obj in all_objects.values()])
-        elif cls not in classes.keys():
-            print("** class doesn't exist **")
-        else:
-            print([str(obj) for key, obj in all_objects.items()
-                   if key.split('.')[0] == cls])
-
-    def help_all(self):
-        print(
-            "All command to print all string representation of all instances"
-        )
-        print("Usage: all or all <class name>")
-        print("Example: all")
-        print("Example: all BaseModel")
-
-    def do_update(self, args):
-
-        args_split = args.split(' ')
-
-        if len(args_split) < 4:
-            args_len = len(args_split)
-            # print(args_len)
-            # print(args_split)
-            if not args:
-                print("** class name missing **")
-                return
-            if args_len == 1:
-                print("** instance id missing **")
-                return
-            if args_len == 2:
-                print("** attribute name missing **")
-                return
-            if args_len == 3:
-                print("** value missing **")
-                return
-
-        else:
-            args_split = args_split[:4]
-
-            cls_name = args_split[0]
-            obj_id = args_split[1]
-            attr_name = args_split[2]
-            attr_value = args_split[3]
-
-            storage = FileStorage()
-            storage.reload()
-            all_objects = storage.all()
-
-            # create a key of the form <class name>.<id> to search in storage
-            user_key = cls_name + '.' + obj_id
-
-            if cls_name not in classes.keys():
-                print("** class doesn't exist **")
-                return
-            if user_key not in all_objects.keys():
-                print("** no instance found **")
-                return
-
-            # if we reach here, then the object is found and update it.
-            obj = all_objects[user_key]
-            setattr(obj, attr_name, attr_value)
-            obj.save()
-
-    def help_update(self):
-        print("Update command to update an attribute of an object")
-        print("Usage: update <class name> <id> <attr name> <attr value>")
-        print(
-            "Example: update BaseModel 55a800762378 email username@gmail.com"
-        )
-
-    def do_count(self, cls):
-        storage = FileStorage()
-        storage.reload()
-        all_objects = storage.all()
-        if not cls:
-            # Print all objects in the storage
-            print(len([str(obj) for obj in all_objects.values()]))
-            return
-        elif cls not in classes.keys():
-            print("** class doesn't exist **")
-            return
-
-        # If it reaches here, Print all objects of a specific class
-        print(len([str(obj) for key, obj in all_objects.items()
-                   if key.split('.')[0] == cls]))
-        
-    def help_count(self):
-        print("Count command to count the number of instances of a class")
-        print("Usage: <class name>.count()")
-        print("Example: User.count()")
-        
-    
-
-if __name__ == '__main__':
-    HBNBCommand().cmdloop()
+    def delete(self, obj=None):
+        """Delete an object from the __objects"""
+        if obj is not None:
+            for key, val in list(FileStorage.__objects.items()):
+                if obj == val:
+                    del FileStorage.__objects[key]
+                    print("Deleted: {}".format(key))
+                    self.save()
+                    
+    def close(self):
+        self.reload()
