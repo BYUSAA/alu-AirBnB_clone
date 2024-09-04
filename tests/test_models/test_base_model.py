@@ -1,26 +1,42 @@
+#!/usr/bin/python3
 import unittest
 from models.base_model import BaseModel
+from datetime import datetime
+import uuid
 
 class TestBaseModel(unittest.TestCase):
-    def test_instantiation(self):
-        model = BaseModel()
-        self.assertIsInstance(model, BaseModel)
+    """Unittest for the BaseModel class."""
 
-    def test_attributes(self):
-        model = BaseModel()
-        self.assertTrue(hasattr(model, 'id'))
-        self.assertTrue(hasattr(model, 'created_at'))
-        self.assertTrue(hasattr(model, 'updated_at'))
+    def setUp(self):
+        """Setup a new instance for testing."""
+        self.model = BaseModel()
 
-    def test_save(self):
-        model = BaseModel()
-        model.save()
-        self.assertTrue(model.updated_at > model.created_at)
+    def test_instance_creation(self):
+        """Test if an instance of BaseModel is created."""
+        self.assertIsInstance(self.model, BaseModel)
+
+    def test_unique_id(self):
+        """Test if each instance has a unique ID."""
+        new_model = BaseModel()
+        self.assertNotEqual(self.model.id, new_model.id)
+
+    def test_created_at(self):
+        """Test if created_at is set during instantiation."""
+        self.assertIsInstance(self.model.created_at, datetime)
+
+    def test_updated_at(self):
+        """Test if updated_at is set during instantiation and updated on save()."""
+        old_updated_at = self.model.updated_at
+        self.model.save()
+        self.assertNotEqual(old_updated_at, self.model.updated_at)
 
     def test_to_dict(self):
-        model = BaseModel()
-        model_dict = model.to_dict()
-        self.assertIsInstance(model_dict, dict)
-        self.assertIn('id', model_dict)
-        self.assertIn('created_at', model_dict)
-        self.assertIn('updated_at', model_dict)
+        """Test if to_dict method returns the correct dictionary representation."""
+        model_dict = self.model.to_dict()
+        self.assertEqual(model_dict['__class__'], 'BaseModel')
+        self.assertEqual(model_dict['id'], self.model.id)
+        self.assertEqual(model_dict['created_at'], self.model.created_at.isoformat())
+        self.assertEqual(model_dict['updated_at'], self.model.updated_at.isoformat())
+
+if __name__ == "__main__":
+    unittest.main()
