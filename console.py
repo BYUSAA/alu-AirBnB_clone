@@ -1,9 +1,34 @@
+from cmd import Cmd
+from models import storage
+from models.engine.errors import *
+import shlex
+from models.base_model import BaseModel
+from models.user import User
+from models.state import State
+from models.city import City
+from models.amenity import Amenity
+from models.place import Place
+from models.review import Review
+
+# Global variable of registered models
+classes = storage.models
+
+
+class HBNBCommand(Cmd):
+    
 prompt = '(hbnb) '
 ruler = '-'
 
 def default(self, line):
     """default method for commands not in the cmd module.
     For this application it handles the dot notation commands."""
+    
+    if '.' in arg and arg[-1] == ')':
+            if arg.split('.')[0] not in classes:
+                print("** class doesn't exist **")
+                return
+            return self.handle_class_methods(arg)
+        return Cmd.default(self, arg)
 
     if "." in line:
 
