@@ -11,18 +11,19 @@ Unittest classes:
     TestHBNBCommand_update
 """
 
+
 import os
 import sys
 import unittest
-from models import storage
-from models.engine.file_storage import FileStorage
-from console import HBNBCommand
 from io import StringIO
+from models import storage
 from unittest.mock import patch
+from console import HBNBCommand
+from models.engine.file_storage import FileStorage
 
 
 class TestHBNBCommand_prompting(unittest.TestCase):
-    """Unittests for testing prompting of the HBNB command interpreter."""
+    """testing prompting of the HBNB command interpreter."""
 
     def test_prompt_string(self):
         self.assertEqual("(hbnb) ", HBNBCommand.prompt)
@@ -34,7 +35,7 @@ class TestHBNBCommand_prompting(unittest.TestCase):
 
 
 class TestHBNBCommand_help(unittest.TestCase):
-    """Unittests for testing help messages of the HBNB command interpreter."""
+    """testing help messages of the HBNB command interpreter."""
 
     def test_help_quit(self):
         h = "Quit command exit the program"
@@ -97,7 +98,7 @@ class TestHBNBCommand_help(unittest.TestCase):
 
 
 class TestHBNBCommand_exit(unittest.TestCase):
-    """Unittests for testing exiting from the HBNB command interpreter."""
+    """testing exiting from the HBNB command interpreter."""
 
     def test_quit_exits(self):
         with patch("sys.stdout", new=StringIO()) as output:
@@ -109,7 +110,7 @@ class TestHBNBCommand_exit(unittest.TestCase):
 
 
 class TestHBNBCommand_create(unittest.TestCase):
-    """Unittests for testing create from the HBNB command interpreter."""
+    """tests for testing create from the HBNB command interpreter."""
 
     @classmethod
     def setUp(self):
@@ -181,7 +182,7 @@ class TestHBNBCommand_create(unittest.TestCase):
 
 
 class TestHBNBCommand_show(unittest.TestCase):
-    """Unittests for testing show from the HBNB command interpreter"""
+    """testing show from the HBNB command interpreter"""
 
     @classmethod
     def setUp(self):
@@ -431,7 +432,7 @@ class TestHBNBCommand_show(unittest.TestCase):
 
 
 class TestHBNBCommand_destroy(unittest.TestCase):
-    """Unittests for testing destroy from the HBNB command interpreter."""
+    """testing destroy from the HBNB command interpreter."""
 
     @classmethod
     def setUp(self):
@@ -689,7 +690,7 @@ class TestHBNBCommand_destroy(unittest.TestCase):
 
 
 class TestHBNBCommand_all(unittest.TestCase):
-    """Unittests for testing all of the HBNB command interpreter."""
+    """testing all of the HBNB command interpreter."""
 
     @classmethod
     def setUp(self):
@@ -835,7 +836,7 @@ class TestHBNBCommand_all(unittest.TestCase):
 
 
 class TestHBNBCommand_update(unittest.TestCase):
-    """Unittests for testing update from the HBNB command interpreter."""
+    """testing update from the HBNB command interpreter."""
 
     @classmethod
     def setUp(self):
@@ -1430,7 +1431,7 @@ class TestHBNBCommand_update(unittest.TestCase):
 
 
 class TestHBNBCommand_count(unittest.TestCase):
-    """Unittests for testing count method of HBNB comand interpreter."""
+    """testing count method of HBNB comand interpreter."""
 
     @classmethod
     def setUp(self):
@@ -1496,6 +1497,89 @@ class TestHBNBCommand_count(unittest.TestCase):
             self.assertFalse(HBNBCommand().onecmd("Review.count()"))
             self.assertEqual("1", output.getvalue().strip())
 
+
+class TestConsole(unittest.TestCase):
+    """Test console"""
+
+    def setUp(self):
+        """Set up"""
+        self.id_regex = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}"
+        "-[0-9a-f]{4}-[0-9a-f]{12}"
+
+    def test_create(self):
+        """Test create"""
+        with patch('sys.stdout', new=StringIO()) as f:
+            HBNBCommand().onecmd("create")
+            self.assertEqual("** class name missing **", f.getvalue().strip())
+        with patch('sys.stdout', new=StringIO()) as f:
+            HBNBCommand().onecmd("create FakeClass")
+            self.assertEqual("** class doesn't exist **", f.getvalue().strip())
+        with patch('sys.stdout', new=StringIO()) as f:
+            HBNBCommand().onecmd("create BaseModel")
+            self.assertRegex(f.getvalue().strip(), self.id_regex)
+
+    def test_show(self):
+        """Test show"""
+        with patch('sys.stdout', new=StringIO()) as f:
+            HBNBCommand().onecmd("show")
+            self.assertEqual("** class name missing **", f.getvalue().strip())
+        with patch('sys.stdout', new=StringIO()) as f:
+            HBNBCommand().onecmd("show FakeClass")
+            self.assertEqual("** instance id missing **", f.getvalue().strip())
+        with patch('sys.stdout', new=StringIO()) as f:
+            HBNBCommand().onecmd("show BaseModel")
+            self.assertEqual("** instance id missing **", f.getvalue().strip())
+        with patch('sys.stdout', new=StringIO()) as f:
+            HBNBCommand().onecmd("show BaseModel 1234")
+            self.assertEqual("** no instance found **", f.getvalue().strip())
+        with patch('sys.stdout', new=StringIO()) as f:
+            HBNBCommand().onecmd("create BaseModel")
+            self.assertRegex(f.getvalue().strip(), self.id_regex)
+            HBNBCommand().onecmd("show BaseModel " + f.getvalue().strip())
+            self.assertRegex(f.getvalue().strip(), self.id_regex)
+
+    def test_destroy(self):
+        """Test destroy"""
+        with patch('sys.stdout', new=StringIO()) as f:
+            HBNBCommand().onecmd("destroy")
+            self.assertEqual("** class name missing **", f.getvalue().strip())
+        with patch('sys.stdout', new=StringIO()) as f:
+            HBNBCommand().onecmd("destroy FakeClass")
+            self.assertEqual("** instance id missing **", f.getvalue().strip())
+        with patch('sys.stdout', new=StringIO()) as f:
+            HBNBCommand().onecmd("destroy BaseModel")
+            self.assertEqual("** instance id missing **", f.getvalue().strip())
+        with patch('sys.stdout', new=StringIO()) as f:
+            HBNBCommand().onecmd("destroy BaseModel 1234")
+            self.assertEqual("** no instance found **", f.getvalue().strip())
+        with patch('sys.stdout', new=StringIO()) as f:
+            HBNBCommand().onecmd("create BaseModel")
+            HBNBCommand().onecmd("destroy BaseModel " + f.getvalue())
+            self.assertIn("Destroyed successfully!", f.getvalue().strip())
+
+    def test_all(self):
+        """Test all"""
+        # with patch('sys.stdout', new=StringIO()) as f:
+        #     HBNBCommand().onecmd("all")
+        #     self.assertEqual("[]", f.getvalue().strip())
+
+        with patch('sys.stdout', new=StringIO()) as f:
+            HBNBCommand().onecmd("all FakeClass")
+            self.assertEqual("** class doesn't exist **", f.getvalue().strip())
+        with patch('sys.stdout', new=StringIO()) as f:
+            HBNBCommand().onecmd("create BaseModel")
+            HBNBCommand().onecmd("all BaseModel")
+            self.assertIn("BaseModel", f.getvalue().strip())
+
+    def test_quit(self):
+        """Test quit"""
+        with patch('sys.stdout', new=StringIO()) as f:
+            self.assertTrue(HBNBCommand().onecmd("quit"))
+
+    def test_EOF(self):
+        """Test EOF"""
+        with patch('sys.stdout', new=StringIO()) as f:
+            self.assertTrue(HBNBCommand().onecmd("EOF"))
 
 if __name__ == "__main__":
     unittest.main()
