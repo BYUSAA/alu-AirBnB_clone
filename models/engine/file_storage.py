@@ -17,7 +17,9 @@ from models.review import Review
 # In the class FileStorage
 
 class FileStorage:
-    """Serializes instances to a JSON file and deserializes them back to instances."""
+    """Serializes instances to a JSON file and deserializes instances from a JSON file"""
+    __file_path = 'file.json'
+    __objects = {}
 
     # The dictionary of all classes
     __classes = {
@@ -65,6 +67,7 @@ class FileStorage:
         """
         obj: the object with key <obj class name>.id
         """
+        if obj:
         key = obj.__class__.__name__ + "." + obj.id
         self.__objects[key] = obj
         # json_data = json.dump(obj)
@@ -79,19 +82,36 @@ class FileStorage:
         for key in self.__objects.keys():
             json_obj[key] = self.__objects[key].to_dict()
 
-        with open(self.__file_path, 'w') as json_file:
-            json.dump(json_obj, json_file)
+        with open(self.__file_path, 'w') as f:
+            objs = {key: obj.to_dict() for key, obj in self.__objects.items()}
+            json.dump(objs, f)
 
     def reload(self):
-        """Deserializes the JSON file to __objects"""
+        "Deserializes the JSON file to __objects"""
         # code to deserialize...
         """Deserializes the JSON file to __objects (only if the JSON file"""
         """(path: __file_path) exists ; otherwise, do nothing."""
         if os.path.exists(self.__file_path):
             with open(self.__file_path, 'r') as json_file:
                 json_obj = json.load(json_file)
-                for key in json_obj.keys():
-
+                 for key, obj in objs.items():
+                    cls_name = obj["__class__"]
+                      if cls_name == "BaseModel":
+                        self.__objects[key] = BaseModel(**obj)
+                    elif cls_name == "User":
+                        self.__objects[key] = User(**obj)
+                    elif cls_name == "Place":
+                        self.__objects[key] = Place(**obj)
+                    elif cls_name == "City":
+                        self.__objects[key] = City(**obj)
+                    elif cls_name == "Amenity":
+                        self.__objects[key] = Amenity(**obj)
+                    elif cls_name == "State":
+                        self.__objects[key] = State(**obj)
+                    elif cls_name == "Review":
+                        self.__objects[key] = Review(**obj)
+        except FileNotFoundError:
+            pass
                     # By providing the dict value stored in json_obj[key] as
                     # kwargs, genrate an object with the same attributes
                     self.__objects[key] = eval(
