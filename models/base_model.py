@@ -1,112 +1,72 @@
 #!/usr/bin/python3
-"""
-This File defines the BaseModel class that will
-serve as the base class for all our models."""
+"""This module contains the BaseModel class"""
 
-from uuid import uuid4
 from datetime import datetime
 import models
+import uuid
+from sqlalchemy import Column, String, DateTime
+from sqlalchemy.ext.declarative import declarative_base
+
+# print format of create_engine
+# 'mysql+mysqldb://<username>:<password>@<host>:<port>/<db_name>'
+# connect with the mysql database
+
+Base = declarative_base()
+
+storage_type = 'HBNB_TYPE_STORAGE'
 
 
 class BaseModel:
-    """Base class for all our classes"""
+    """Base class for all common attributes and methods"""
+
+    id = Column(String(60), primary_key=True, nullable=False,
+                default=str(uuid.uuid4()))
+    created_at = Column(DateTime, nullable=False,
+                        default=datetime.utcnow())
+    updated_at = Column(DateTime, nullable=False,
+                        default=datetime.utcnow())
 
     def __init__(self, *args, **kwargs):
-        """constructor it either deserialize
-        a serialized class or intialize a new"""
+        """Initialize BaseModel"""
 
-        # initialize if nothing is passed
-        if kwargs == {}:
-            self.id = str(uuid4())
+        # if keyword argument is provided initialize class with the specified
+        # values
+        if kwargs != {}:
+            for key, val in kwargs.items():
+                if key == '__class__':
+                    continue
+                if key == 'created_at' or key == 'updated_at':
+                    val = datetime.fromisoformat(val)
+                # elif key == 'updated_at':
+                #     val = datetime.fromisoformat(val)
+                self.__setattr__(key, val)
+        else:
+            self.id = str(uuid.uuid4())
             self.created_at = datetime.utcnow()
-            self.updated_at = datetime.utcnow()
-            models.storage.new(self)
-            return
-
-        # using key words (deserialize)
-        for key, val in kwargs.items():
-            if key == '__class__':
-                continue
-            self.__dict__[key] = val
-        if 'created_at' in kwargs:
-            self.created_at = datetime.strptime(
-                    kwargs['created_at'],
-                    '%Y-%m-%dT%H:%M:%S.%f')
-        if 'updated_at' in kwargs:
-            self.updated_at = datetime.strptime(
-                    kwargs['updated_at'],
-                    '%Y-%m-%dT%H:%M:%S.%f')
+            self.updated_at = self.created_at
 
     def __str__(self):
-        """overide str representation of self"""
-        fmt = "[{}] ({}) {}"
-        return fmt.format(
-                type(self).__name__,
-                self.id,
-                self.__dict__)
+        """Return a string representation of BaseModel"""
+
+        return f"[{self.__class__.__name__}] ({self.id}) {self.__dict__}"
 
     def save(self):
-        """updates last updated variable"""
+        """Update the updated_at attribute"""
         self.updated_at = datetime.utcnow()
+        models.storage.new(self)
         models.storage.save()
 
+    def delete(self):
+        """Delete the current instance from the storage"""
+        models.storage.delete(self)
+
     def to_dict(self):
-        """Returns a dictionary representation of self"""
-        temp = {**self.__dict__}
-        temp['__class__'] = type(self).__name__
-        temp['created_at'] = self.created_at.strftime('%Y-%m-%dT%H:%M:%S.%f')
-        temp['updated_at'] = self.updated_at.strftime('%Y-%m-%dT%H:%M:%S.%f')
-        return temp
+        """Return a dict representation of the BaseModel"""
 
-    @classmethod
-    def all(cls):
-        """Retrieve all current instances of cls"""
-        return models.storage.find_all(cls.__name__)
-
-    @classmethod
-    def count(cls):
-        """Get the number of all current instances of cls"""
-        return len(models.storage.find_all(cls.__name__))
-
-    @classmethod
-    def create(cls, *args, **kwargs):
-        """Creates an Instance"""
-        new = cls(*args, **kwargs)
-        return new.id
-
-    @classmethod
-    def show(cls, instance_id):
-        """Retrieve an instance"""
-        return models.storage.find_by_id(
-            cls.__name__,
-            instance_id
-        )
-
-    @classmethod
-    def destroy(cls, instance_id):
-        """Deletes an instance"""
-        return models.storage.delete_by_id(
-            cls.__name__,
-            instance_id
-        )
-
-    @classmethod
-    def update(cls, instance_id, *args):
-        """Updates an instance
-        if args has one elem and its a dict:
-        it updates by key value
-        else:
-        updates by first being key and second being value"""
-        if not len(args):
-            print("** attribute name missing **")
-            return
-        if len(args) == 1 and isinstance(args[0], dict):
-            args = args[0].items()
-        else:
-            args = [args[:2]]
-        for arg in args:
-            models.storage.update_one(
-                cls.__name__,
-                instance_id,
-                *arg
-            )
+        formated_dict = self.__dict__.copy()
+        formated_dict['created_at'] = formated_dict['created_at'].isoformat()
+        formated_dict['updated_at'] = formated_dict['updated_at'].isoformat()
+        formated_dict['__class__'] = self.__class__.__name__
+        if '_sa_instance_state' in formated_dict:
+            del formated_dict['_sa_instance_state']
+        return formated_dict
