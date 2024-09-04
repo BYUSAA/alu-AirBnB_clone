@@ -12,8 +12,21 @@ from models.place import Place
 from models.review import Review
 from models.state import State
 
+from models.review import Review
+
+# In the class FileStorage
 
 class FileStorage:
+    """Serializes instances to a JSON file and deserializes them back to instances."""
+
+    # The dictionary of all classes
+    __classes = {
+        'BaseModel': BaseModel,
+        'User': User,
+        'Place': Place,
+        'Review': Review,
+        # other classes...
+    }
 
     # private class attributes
     # __file_path is the path to the JSON file to store all objects.
@@ -27,10 +40,13 @@ class FileStorage:
     # obects = {BaseModel.12121212: }
     __objects = {}
 
+        def all(self):
+        """Returns the dictionary __objects"""
+        return self.__objects
+
     def all(self, cls=None):
         """Returns a list of all objects if cls is None. If cls is provided, return all objects of that type.
         """
-
         if cls is not None:
 
             obj = {}
@@ -43,20 +59,22 @@ class FileStorage:
             return self.__objects
 
     # sets in __objects the obj with key <obj class name>.id
+
     def new(self, obj):
-        """Add obj with key <obj class name>.id to dictionary.
-
-        Args:
-
+        """Adds new object to __objects dictionary"""
+        """
         obj: the object with key <obj class name>.id
         """
-        key = obj.__class__.__name__ + '.' + obj.id
+        key = obj.__class__.__name__ + "." + obj.id
+        self.__objects[key] = obj
         # json_data = json.dump(obj)
         self.__objects[key] = obj
 
     # serializes __objects to the JSON file (path: __file_path)
+
     def save(self):
-        """ Serializes __objects to the JSON file (path: __file_path)."""
+        """Serializes __objects to the JSON file (path: __file_path)"""
+        # code to serialize...
         json_obj = {}
         for key in self.__objects.keys():
             json_obj[key] = self.__objects[key].to_dict()
@@ -65,6 +83,8 @@ class FileStorage:
             json.dump(json_obj, json_file)
 
     def reload(self):
+        """Deserializes the JSON file to __objects"""
+        # code to deserialize...
         """Deserializes the JSON file to __objects (only if the JSON file"""
         """(path: __file_path) exists ; otherwise, do nothing."""
         if os.path.exists(self.__file_path):
@@ -88,3 +108,10 @@ class FileStorage:
                     
     def close(self):
         self.reload()
+
+
+
+
+
+
+
