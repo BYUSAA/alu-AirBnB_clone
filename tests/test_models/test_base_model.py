@@ -1,62 +1,56 @@
 #!/usr/bin/python3
+"""Unittest module for the BaseModel Class."""
+
 import unittest
-import time
 from models.base_model import BaseModel
+import os
+import time
+from io import StringIO
+from unittest.mock import patch
 
 
 class TestBaseModel(unittest.TestCase):
-    """Test cases for BaseModel class."""
+    """Test cases for the BaseModel."""
 
-    def setUp(self):
-        self.testModel = BaseModel()
+    def test_instance(self):
+        """Test if object is an instance of BaseModel."""
+        base = BaseModel()
+        self.assertIsInstance(base, BaseModel)
 
-    # tear down
-    def tearDown(self):
-        del self.testModel
+    def test_class_type(self):
+        """Test the class type of the instance."""
+        base = BaseModel()
+        self.assertEqual(str(type(base)), "<class 'models.base_model.BaseModel'>")
 
     def test_save(self):
-        baseModel = BaseModel()
-        updated_at_before_save = baseModel.updated_at
-        time.sleep(0.5)
-        baseModel.save()
-        updated_at_after_save = baseModel.updated_at
-        self.assertNotEqual(baseModel.updated_at, baseModel.created_at)
-        self.assertNotEqual(updated_at_before_save, updated_at_after_save)
+        """Test the save method updates the updated_at attribute."""
+        base = BaseModel()
+        old_time = base.updated_at
+        time.sleep(1)
+        base.save()
+        self.assertNotEqual(base.updated_at, old_time)
 
-    # test BaseModel before and after clling save method
-    def test_save_before_save(self):
-        self.assertEqual(self.testModel.updated_at,
-                         self.testModel.created_at)
-    # test BaseModel before and after clling save method
+    def test_save_creates_file(self):
+        """Test if save creates a file.json."""
+        if os.path.isfile("file.json"):
+            os.remove("file.json")
+        base = BaseModel()
+        base.save()
+        self.assertTrue(os.path.isfile("file.json"))
 
-    def test_save_after_save(self):
-        self.testModel.save()
-        self.assertNotEqual(self.testModel.updated_at,
-                            self.testModel.created_at)
+    def test_str_representation(self):
+        """Test the string representation of the object."""
+        base = BaseModel()
+        expected_output = f"[{base.__class__.__name__}] ({base.id}) {base.__dict__}\n"
+        with patch("sys.stdout", new=StringIO()) as fake_out:
+            print(base)
+            self.assertEqual(fake_out.getvalue(), expected_output)
 
-    # test BaseModel to_dict method return type
-    def test_to_dict_return(self):
-        testModel_dict = self.testModel.to_dict()
-        self.assertIsInstance(testModel_dict, dict)
-
-    # test BaseModel to_dict method for it's content.
-    def test_to_dict_value(self):
-        testModel_dict = self.testModel.to_dict()
-        self.assertIn('__class__', testModel_dict)
-
-    # test BaseModel to_dict method if it's content has the correct types
-    def test_to_dict_content_type(self):
-        testModel_dict = self.testModel.to_dict()
-        self.assertIsInstance(testModel_dict.get('created_at'), str)
-        self.assertIsInstance(testModel_dict.get('created_at'), str)
-
-    # test string value of BaseModel
-    def test__str__(self):
-        class_name = self.testModel.__class__.__name__
-        id = self.testModel.id
-        dict_v = self.testModel.__dict__
-        self.assertEqual(str(self.testModel),
-                         f"[{class_name}] ({id}) {dict_v}")
+    def test_to_dict(self):
+        """Test the to_dict method of BaseModel."""
+        base = BaseModel()
+        dict_repr = base.to_dict()
+        self.assertEqual(dict_repr['__class__'], base.__class__.__name__)
 
 
 if __name__ == "__main__":
